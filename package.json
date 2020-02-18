@@ -1,0 +1,35 @@
+{
+  "name": "diffutil",
+  "version": "0.0.1",
+  "description": "Compares two objects and extracts the differents. It supports different result structure in order to use for Restful APIs, or MongoDB pacthes and etc",
+  "main": "index.js",
+  "scripts": {
+    "test": "jest"
+  },
+  "jest": {
+    "moduleFileExtensions": [
+      "js"
+    ],
+    "verbose": true
+  },
+  "keywords": [
+    "Diff",
+    "compare",
+    "mongodb",
+    "restfull"
+  ],
+  "repository": "https://github.com/mina-its/diffutil.git",
+  "author": "Shila & Farhad",
+  "license": "ISC",
+  "dependencies": {
+    "@types/jest": "^25.1.1",
+    "@types/lodash": "^4.14.136",
+    "@types/mongodb": "^3.1.28",
+    "@types/node": "^13.7.0",
+    "lodash": "^4.17.15",
+    "mongodb": "^3.5.3"
+  },
+  "devDependencies": {
+    "jest": "^25.1.0"
+  }
+}
