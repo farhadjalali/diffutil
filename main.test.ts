@@ -20,6 +20,23 @@ describe(`simple objects _id:'${_id}'`, () => {
 		expect(main.diff(oldDoc, newDoc)).toEqual(expectedResult);
 	});
 
+	test('root: no change on date', () => {
+		let date= new Date();
+		let oldDoc = {_id, month: date};
+		let newDoc = {_id, month: date};
+		let expectedResult = [];
+		expect(main.diff(oldDoc, newDoc)).toEqual(expectedResult);
+	});
+
+	test('root: change on date', () => {
+		let date1= new Date();
+		let date2= new Date().setDate(1);
+		let oldDoc = {_id, month: date1};
+		let newDoc = {_id, month: date2};
+		let expectedResult = [{query: {_id}, update: {$set: {month: date2}}}];
+		expect(main.diff(oldDoc, newDoc)).toEqual(expectedResult);
+	});
+
 	test('root: one change', () => {
 		let oldDoc = {_id, month: "may"};
 		let newDoc = {_id, month: "april"};
