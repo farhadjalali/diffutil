@@ -18,7 +18,7 @@ var ResultModel;
 })(ResultModel = exports.ResultModel || (exports.ResultModel = {}));
 var DiffKind;
 (function (DiffKind) {
-    DiffKind["newlyAdded"] = "N";
+    DiffKind["added"] = "N";
     DiffKind["edited"] = "E";
     DiffKind["deleted"] = "D";
     DiffKind["arrayChange"] = "A";

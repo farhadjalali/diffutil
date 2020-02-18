@@ -13,7 +13,7 @@ export class Change {
 	key: any;
 	oldVal: any;
 	newVal: any;
-	kind: DiffKind;
+	kind?: DiffKind;
 	unset?: any;
 	filters?: [];
 }
@@ -23,7 +23,7 @@ export enum ResultModel {
 }
 
 export enum DiffKind {
-	newlyAdded = 'N', //  // newly added property/element
+	added = 'N', //  // newly added property/element
 	edited = 'E', // property/element was edited
 	deleted = 'D', // property/element was deleted
 	arrayChange = 'A'

@@ -1,13 +1,76 @@
 import _ = require("lodash");
 import {Change, DiffKind, MongoPatchWithIdChange, ResultModel} from "./Types";
 
+const idName = "_id";
+
+function getChanges(oldDoc: any, newDoc: any, path: any, keyPrefix: string) {
+	let changes: Change[] = [];
+
+	let oldKeys = Object.keys(oldDoc);
+	let newKeys = Object.keys(newDoc);
+	let keys = _.union(oldKeys, newKeys);
+
+	let compareBasedOnId = oldDoc[idName] && newDoc[idName];
+	if (compareBasedOnId) {
+		keys = keys.filter(key => key !== idName);
+		if (!path) path = newDoc["_id"];
+	}
+
+	for (let key of keys) {
+		let oldVal = oldDoc[key];
+		let newVal = newDoc[key];
+
+		let set = {};
+		set[key] = newVal;
+		let change = new Change();
+		change.path = path;
+		change.key = keyPrefix + key;
+
+		if (oldVal == undefined) { // added property
+			change.kind = DiffKind.added;
+			change.newVal = newVal;
+
+		} else if (newVal == undefined) { // deleted property
+			change.kind = DiffKind.deleted;
+			change.oldVal = oldVal;
+
+		} else { // edited property
+			change.kind = DiffKind.edited;
+			change.newVal = newVal;
+			change.oldVal = oldVal;
+
+			if (_.isObject(newVal)) {
+				if (_.isObject(oldVal)) {
+					let innerChanges = getChanges(oldVal, newVal, path, change.key + ".");
+					changes.push(...innerChanges);
+					continue;
+				} else {
+					// nothing
+				}
+			} else {
+				if (_.isObject(oldVal)) {
+
+				} else {
+					if (oldVal === newVal) // no change
+						continue;
+				}
+			}
+		}
+
+		changes.push(change);
+	}
+	return changes;
+}
+
 export function diff(oldDoc: any, newDoc: any, model: ResultModel = ResultModel.MongoPatchWithId): any {
 	if (!_.isObject(oldDoc) || !_.isObject(newDoc))
 		return oldDoc === newDoc;
 
+	let changes = getChanges(oldDoc, newDoc, null, "");
+
 	switch (model) {
 		case ResultModel.MongoPatchWithId:
-			return diffMongoPatchWithId(oldDoc, newDoc);
+			return mergeChangesOnMongoPatchWithId(changes);
 
 		default:
 			throw "Not implemented model!";
@@ -22,48 +85,18 @@ function mergeChangesOnMongoPatchWithId(changes: Change[]): MongoPatchWithIdChan
 			item = {query: {_id: change.path}, update: {}};
 			result.push(item);
 		}
-		if (change.kind == DiffKind.edited) {
-			if (change.newVal == undefined) {
-				item.update.$unset = item.update.$unset || {};
-				item.update.$unset[change.key] = "";
-			} else {
+		switch (change.kind) {
+			case DiffKind.added:
+			case DiffKind.edited:
 				item.update.$set = item.update.$set || {};
 				item.update.$set[change.key] = change.newVal;
-			}
+				break;
+
+			case DiffKind.deleted:
+				item.update.$unset = item.update.$unset || {};
+				item.update.$unset[change.key] = "";
+				break;
 		}
 	}
 	return result;
-}
-
-export function diffMongoPatchWithId(oldDoc: any, newDoc: any): MongoPatchWithIdChange[] {
-	let changes: Change[] = [];
-	const idName = "_id";
-
-	for (let key in oldDoc) {
-		if (key === idName) continue;
-
-		let oldVal = oldDoc[key];
-		let newVal = newDoc[key];
-
-		let set = {};
-		set[key] = newVal;
-		let change: Change = {path: oldDoc._id, key, newVal: newVal, oldVal: oldVal, kind: DiffKind.edited};
-		changes.push(change);
-
-		if (_.isObject(newVal)) {
-			if (!_.isObject(oldVal)) {
-				// nothing
-			} else {
-				// looop
-			}
-		} else {
-			if (_.isObject(oldVal)) {
-
-			} else {
-				// nothing
-			}
-		}
-	}
-
-	return mergeChangesOnMongoPatchWithId(changes);
 }

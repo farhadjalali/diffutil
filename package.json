@@ -1,6 +1,6 @@
 {
   "name": "diffutil",
-  "version": "0.0.1",
+  "version": "0.0.2",
   "description": "Compares two objects and extracts the differents. It supports different result structure in order to use for Restful APIs, or MongoDB pacthes and etc",
   "main": "index.js",
   "scripts": {
