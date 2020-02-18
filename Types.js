@@ -10,17 +10,24 @@ class MongoPatchWithIdChange {
 }
 exports.MongoPatchWithIdChange = MongoPatchWithIdChange;
 class Change {
+    constructor(path, key) {
+        this.path = path;
+        this.key = key;
+    }
 }
 exports.Change = Change;
 var ResultModel;
 (function (ResultModel) {
-    ResultModel[ResultModel["MongoPatchWithId"] = 1] = "MongoPatchWithId";
+    ResultModel[ResultModel["MongoPatch"] = 1] = "MongoPatch";
+    ResultModel[ResultModel["Restful"] = 2] = "Restful";
+    ResultModel[ResultModel["ChangeSet"] = 3] = "ChangeSet";
 })(ResultModel = exports.ResultModel || (exports.ResultModel = {}));
 var DiffKind;
 (function (DiffKind) {
     DiffKind["added"] = "N";
     DiffKind["edited"] = "E";
     DiffKind["deleted"] = "D";
-    DiffKind["arrayChange"] = "A";
+    DiffKind["arrayAdded"] = "AN";
+    DiffKind["arrayDeleted"] = "AD";
 })(DiffKind = exports.DiffKind || (exports.DiffKind = {}));
 //# sourceMappingURL=Types.js.map

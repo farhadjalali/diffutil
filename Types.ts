@@ -5,26 +5,32 @@ export class DiffConfig {
 export class MongoPatchWithIdChange {
 	query: any;
 	update: any = {};
-	filter?: any;
+	options?: any;
 }
 
 export class Change {
+	constructor(path: any, key: string) {
+		this.path = path;
+		this.key = key;
+	}
+
 	path: any;
-	key: any;
+	key: string;
 	oldVal: any;
 	newVal: any;
 	kind?: DiffKind;
-	unset?: any;
-	filters?: [];
 }
 
 export enum ResultModel {
-	MongoPatchWithId = 1,
+	MongoPatch = 1,
+	Restful = 2,
+	ChangeSet = 3,
 }
 
 export enum DiffKind {
-	added = 'N', //  // newly added property/element
-	edited = 'E', // property/element was edited
-	deleted = 'D', // property/element was deleted
-	arrayChange = 'A'
+	added = 'N',
+	edited = 'E',
+	deleted = 'D',
+	arrayAdded = 'AN',
+	arrayDeleted = 'AD'
 }
