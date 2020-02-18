@@ -1,68 +1,68 @@
-import main = require("./main");
 import {ObjectId} from 'mongodb';
-import {ResultModel} from "./Types";
+
+const {diff} = require('./main');
 
 let _id = new ObjectId();
 
 describe(`simple objects _id:'${_id}'`, () => {
 	test('diff none object', () => {
-		expect(main.diff(1, 1)).toBeTruthy();
+		expect(diff(1, 1)).toBeTruthy();
 	});
 
 	test('diff null object', () => {
-		expect(main.diff(null, {})).toBeFalsy();
+		expect(diff(null, {})).toBeFalsy();
 	});
 
 	test('root: no change', () => {
 		let oldDoc = {_id, month: "may"};
 		let newDoc = {_id, month: "may"};
 		let expectedResult = [];
-		expect(main.diff(oldDoc, newDoc)).toEqual(expectedResult);
+		expect(diff(oldDoc, newDoc)).toEqual(expectedResult);
 	});
 
 	test('root: no change on date', () => {
-		let date= new Date();
+		let date = new Date();
 		let oldDoc = {_id, month: date};
 		let newDoc = {_id, month: date};
 		let expectedResult = [];
-		expect(main.diff(oldDoc, newDoc)).toEqual(expectedResult);
+		expect(diff(oldDoc, newDoc)).toEqual(expectedResult);
 	});
 
 	test('root: change on date', () => {
-		let date1= new Date();
-		let date2= new Date().setDate(1);
+		let date1 = new Date();
+		let date2 = new Date().setDate(1);
 		let oldDoc = {_id, month: date1};
 		let newDoc = {_id, month: date2};
 		let expectedResult = [{query: {_id}, update: {$set: {month: date2}}}];
-		expect(main.diff(oldDoc, newDoc)).toEqual(expectedResult);
+		expect(diff(oldDoc, newDoc)).toEqual(expectedResult);
 	});
 
 	test('root: one change', () => {
 		let oldDoc = {_id, month: "may"};
 		let newDoc = {_id, month: "april"};
 		let expectedResult = [{query: {_id}, update: {$set: {month: "april"}}}];
-		expect(main.diff(oldDoc, newDoc)).toEqual(expectedResult);
+		expect(diff(oldDoc, newDoc)).toEqual(expectedResult);
 	});
 
 	test('root: text to object', () => {
 		let oldDoc = {_id, title: "Roze"};
 		let newDoc = {_id, title: {"en": "Roze"}};
 		let expectedResult = [{query: {_id}, update: {$set: {title: {"en": "Roze"}}}}];
-		expect(main.diff(oldDoc, newDoc)).toEqual(expectedResult);
+		expect(diff(oldDoc, newDoc)).toEqual(expectedResult);
 	});
 
 	test('root: object to text', () => {
 		let oldDoc = {_id, title: {"en": "Roze"}};
 		let newDoc = {_id, title: "Roze"};
 		let expectedResult = [{query: {_id}, update: {$set: {title: "Roze"}}}];
-		expect(main.diff(oldDoc, newDoc)).toEqual(expectedResult);
+		expect(diff(oldDoc, newDoc)).toEqual(expectedResult);
 	});
 
 	test('root: two changes', () => {
 		let oldDoc = {_id, month: "may", day: 1};
 		let newDoc = {_id, month: "april", day: 2};
 		let expectedResult = [{query: {_id}, update: {$set: {month: "april", day: 2}}}];
-		expect(main.diff(oldDoc, newDoc)).toEqual(expectedResult);
+		expect(diff(oldDoc, newDoc)).toEqual(expectedResult);
 	});
 
 	test('root: one change and one delete', () => {
@@ -70,7 +70,7 @@ describe(`simple objects _id:'${_id}'`, () => {
 		let newDoc = {_id, month: "april"};
 		let expectedResult = [{query: {_id}, update: {$set: {month: "april"}, $unset: {day: ""}}}];
 
-		expect(main.diff(oldDoc, newDoc)).toEqual(expectedResult);
+		expect(diff(oldDoc, newDoc)).toEqual(expectedResult);
 	});
 
 	test('root: one change, one delete and one add', () => {
@@ -78,7 +78,7 @@ describe(`simple objects _id:'${_id}'`, () => {
 		let newDoc = {_id, month: "april", year: 2020};
 		let expectedResult = [{query: {_id}, update: {$set: {year: 2020, month: "april"}, $unset: {day: ""}}}];
 
-		expect(main.diff(oldDoc, newDoc)).toEqual(expectedResult);
+		expect(diff(oldDoc, newDoc)).toEqual(expectedResult);
 	});
 
 	test('level2: one change', () => {
@@ -86,7 +86,7 @@ describe(`simple objects _id:'${_id}'`, () => {
 		let newDoc = {_id, address: {city: "Paris", no: 5}};
 		let expectedResult = [{query: {_id}, update: {$set: {"address.city": "Paris"}}}];
 
-		expect(main.diff(oldDoc, newDoc)).toEqual(expectedResult);
+		expect(diff(oldDoc, newDoc)).toEqual(expectedResult);
 	});
 
 	test('level3: one change, one add, one remove', () => {
@@ -100,7 +100,7 @@ describe(`simple objects _id:'${_id}'`, () => {
 			}
 		}];
 
-		expect(main.diff(oldDoc, newDoc)).toEqual(expectedResult);
+		expect(diff(oldDoc, newDoc)).toEqual(expectedResult);
 	});
 });
 
@@ -116,7 +116,7 @@ describe('array change', () => {
 			}
 		}];
 
-		expect(main.diff(oldDoc, newDoc)).toEqual(expectedResult);
+		expect(diff(oldDoc, newDoc)).toEqual(expectedResult);
 	});
 
 	test('level1 one change, one item add', () => {
@@ -130,7 +130,7 @@ describe('array change', () => {
 			}
 		}];
 
-		expect(main.diff(oldDoc, newDoc)).toEqual(expectedResult);
+		expect(diff(oldDoc, newDoc)).toEqual(expectedResult);
 	});
 
 	test('level1 one change, one item delete', () => {
@@ -144,7 +144,7 @@ describe('array change', () => {
 			}
 		}];
 
-		expect(main.diff(oldDoc, newDoc)).toEqual(expectedResult);
+		expect(diff(oldDoc, newDoc)).toEqual(expectedResult);
 	});
 
 	test('level2 one change, one item add', () => {
@@ -158,7 +158,7 @@ describe('array change', () => {
 			}
 		}];
 
-		expect(main.diff(oldDoc, newDoc)).toEqual(expectedResult);
+		expect(diff(oldDoc, newDoc)).toEqual(expectedResult);
 	});
 });
 
@@ -182,7 +182,7 @@ describe('array change with _id', () => {
 			}
 		}];
 
-		expect(main.diff(oldDoc, newDoc)).toEqual(expectedResult);
+		expect(diff(oldDoc, newDoc)).toEqual(expectedResult);
 	});
 
 	test(`one item change and one item add`, () => {
@@ -199,7 +199,7 @@ describe('array change with _id', () => {
 			}
 		}];
 
-		expect(main.diff(oldDoc, newDoc)).toEqual(expectedResult);
+		expect(diff(oldDoc, newDoc)).toEqual(expectedResult);
 	});
 
 	test(`one item delete, one item change, one item insert, change order`, () => {
@@ -229,7 +229,7 @@ describe('array change with _id', () => {
 			}
 		}];
 
-		expect(main.diff(oldDoc, newDoc)).toEqual(expectedResult);
+		expect(diff(oldDoc, newDoc)).toEqual(expectedResult);
 	});
 
 	test(`level 2 change, one add`, () => {
@@ -272,7 +272,7 @@ describe('array change with _id', () => {
 			}
 		}];
 
-		expect(main.diff(oldDoc, newDoc)).toEqual(expectedResult);
+		expect(diff(oldDoc, newDoc)).toEqual(expectedResult);
 	});
 
 	test(`level 2 multiple arrays`, () => {
@@ -317,6 +317,6 @@ describe('array change with _id', () => {
 			}
 		}];
 
-		expect(main.diff(oldDoc, newDoc)).toEqual(expectedResult);
+		expect(diff(oldDoc, newDoc)).toEqual(expectedResult);
 	});
 });
