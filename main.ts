@@ -141,6 +141,7 @@ export function diff(oldDoc: any, newDoc: any, model: ResultModel = ResultModel.
 
 function mergeChangesOnMongoPatchWithId(changes: Change[]): MongoPatchWithIdChange[] {
 	let result: MongoPatchWithIdChange[] = [];
+	let filterItemIndex = 0;
 	for (let change of changes) {
 		let resultItem = _.find<MongoPatchWithIdChange>(result, ch => ch.query._id.equals(change.path));
 		if (!resultItem) {
@@ -151,11 +152,10 @@ function mergeChangesOnMongoPatchWithId(changes: Change[]): MongoPatchWithIdChan
 
 		const re = /\$\[(\$oid:)?([0-9a-f]+)\]/;
 		if (re.test(key)) {
-			resultItem.options = {arrayFilters: []};
-			let itemIndex = 0;
+			resultItem.options = resultItem.options || {arrayFilters: []};
 			let match;
 			while (match = re.exec(key)) {   // e.g.   addresses.$[234234].name > addresses.$[item1].name
-				let itemName = "item" + (++itemIndex);
+				let itemName = "item" + (++filterItemIndex);
 				key = key.replace(re, "$[" + itemName + "]");
 				let filter = {};
 				filter[itemName + "._id"] = match[1] ? new ObjectId(match[2]) : parseInt(match[2]);

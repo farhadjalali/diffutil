@@ -132,6 +132,7 @@ function diff(oldDoc, newDoc, model = Types_1.ResultModel.MongoPatch) {
 exports.diff = diff;
 function mergeChangesOnMongoPatchWithId(changes) {
     let result = [];
+    let filterItemIndex = 0;
     for (let change of changes) {
         let resultItem = _.find(result, ch => ch.query._id.equals(change.path));
         if (!resultItem) {
@@ -141,11 +142,10 @@ function mergeChangesOnMongoPatchWithId(changes) {
         let key = change.key;
         const re = /\$\[(\$oid:)?([0-9a-f]+)\]/;
         if (re.test(key)) {
-            resultItem.options = { arrayFilters: [] };
-            let itemIndex = 0;
+            resultItem.options = resultItem.options || { arrayFilters: [] };
             let match;
             while (match = re.exec(key)) {
-                let itemName = "item" + (++itemIndex);
+                let itemName = "item" + (++filterItemIndex);
                 key = key.replace(re, "$[" + itemName + "]");
                 let filter = {};
                 filter[itemName + "._id"] = match[1] ? new mongodb_1.ObjectId(match[2]) : parseInt(match[2]);
