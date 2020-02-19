@@ -1,7 +1,3 @@
-export class DiffConfig {
-
-}
-
 export class MongoPatchWithIdChange {
 	query: any;
 	update: any = {};

@@ -1,8 +1,5 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-class DiffConfig {
-}
-exports.DiffConfig = DiffConfig;
 class MongoPatchWithIdChange {
     constructor() {
         this.update = {};

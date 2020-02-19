@@ -1,8 +1,8 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-const mongodb_1 = require("mongodb");
+const bson_1 = require("bson");
 const { diff } = require('./main');
-let _id = new mongodb_1.ObjectId();
+let _id = new bson_1.ObjectId();
 describe(`simple objects _id:'${_id}'`, () => {
     test('diff none object', () => {
         expect(diff(1, 1)).toBeTruthy();
@@ -133,10 +133,10 @@ describe('array change', () => {
     });
 });
 describe('array change with _id', () => {
-    let item1Id = new mongodb_1.ObjectId("5e4c21b8b9858718ac777301");
-    let item2Id = new mongodb_1.ObjectId("5e4c21b8b9858718ac777302");
-    let item3Id = new mongodb_1.ObjectId("5e4c21b8b9858718ac777303");
-    let item4Id = new mongodb_1.ObjectId("5e4c21b8b9858718ac777304");
+    let item1Id = new bson_1.ObjectId("5e4c21b8b9858718ac777301");
+    let item2Id = new bson_1.ObjectId("5e4c21b8b9858718ac777302");
+    let item3Id = new bson_1.ObjectId("5e4c21b8b9858718ac777303");
+    let item4Id = new bson_1.ObjectId("5e4c21b8b9858718ac777304");
     test('one change', () => {
         let oldDoc = { _id, addresses: [{ _id: item1Id, city: "London", no: 5 }] };
         let newDoc = { _id, addresses: [{ _id: item1Id, city: "London", no: 6 }] };
@@ -193,9 +193,9 @@ describe('array change with _id', () => {
         expect(diff(oldDoc, newDoc)).toEqual(expectedResult);
     });
     test(`level 2 change, one add`, () => {
-        let item11Id = new mongodb_1.ObjectId("5e4c21b8b9858718ac777311");
-        let item12Id = new mongodb_1.ObjectId("5e4c21b8b9858718ac777312");
-        let item13Id = new mongodb_1.ObjectId("5e4c21b8b9858718ac777313");
+        let item11Id = new bson_1.ObjectId("5e4c21b8b9858718ac777311");
+        let item12Id = new bson_1.ObjectId("5e4c21b8b9858718ac777312");
+        let item13Id = new bson_1.ObjectId("5e4c21b8b9858718ac777313");
         let oldDoc = {
             _id, addresses: [
                 {
@@ -232,9 +232,9 @@ describe('array change with _id', () => {
         expect(diff(oldDoc, newDoc)).toEqual(expectedResult);
     });
     test(`level 2 multiple arrays`, () => {
-        let item11Id = new mongodb_1.ObjectId("5e4c21b8b9858718ac777311");
-        let item12Id = new mongodb_1.ObjectId("5e4c21b8b9858718ac777312");
-        let item13Id = new mongodb_1.ObjectId("5e4c21b8b9858718ac777313");
+        let item11Id = new bson_1.ObjectId("5e4c21b8b9858718ac777311");
+        let item12Id = new bson_1.ObjectId("5e4c21b8b9858718ac777312");
+        let item13Id = new bson_1.ObjectId("5e4c21b8b9858718ac777313");
         let oldDoc = {
             _id, addresses: [
                 {

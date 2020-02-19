@@ -1,7 +1,7 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 const _ = require("lodash");
-const mongodb_1 = require("mongodb");
+const bson_1 = require("bson");
 const types_1 = require("./types");
 const idName = "_id";
 function getArrayChanges(oldArray, newArray, path, keyPrefix) {
@@ -35,7 +35,7 @@ function getArrayChanges(oldArray, newArray, path, keyPrefix) {
             let oldItem = _.find(oldArray, item => item._id.equals(id));
             let newItem = _.find(newArray, item => item._id.equals(id));
             let itemKeyPrefix = keyPrefix;
-            if (id.constructor === mongodb_1.ObjectId)
+            if (isObjectId(id))
                 itemKeyPrefix += "$[$oid:" + id + "]";
             else
                 itemKeyPrefix += "$[" + id + "]";
@@ -58,6 +58,9 @@ function getArrayChanges(oldArray, newArray, path, keyPrefix) {
         }
     }
     return changes;
+}
+function isObjectId(value) {
+    return value._bsontype == "ObjectID";
 }
 function getChanges(oldDoc, newDoc, path, keyPrefix) {
     let changes = [];
@@ -148,7 +151,7 @@ function mergeChangesOnMongoPatchWithId(changes) {
                 let itemName = "item" + (++filterItemIndex);
                 key = key.replace(re, "$[" + itemName + "]");
                 let filter = {};
-                filter[itemName + "._id"] = match[1] ? new mongodb_1.ObjectId(match[2]) : parseInt(match[2]);
+                filter[itemName + "._id"] = match[1] ? new bson_1.ObjectId(match[2]) : parseInt(match[2]);
                 resultItem.options.arrayFilters.push(filter);
             }
         }

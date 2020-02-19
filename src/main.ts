@@ -1,5 +1,5 @@
 import _ = require("lodash");
-import {ObjectId} from 'mongodb';
+import {ObjectId} from "bson";
 import {Change, DiffKind, MongoPatchWithIdChange, ResultModel} from "./types";
 
 const idName = "_id";
@@ -36,7 +36,7 @@ function getArrayChanges(oldArray: any[], newArray: any[], path: any, keyPrefix:
 			let newItem = _.find(newArray, item => item._id.equals(id));
 
 			let itemKeyPrefix = keyPrefix;
-			if (id.constructor === ObjectId)
+			if (isObjectId(id))
 				itemKeyPrefix += "$[$oid:" + id + "]";
 			else
 				itemKeyPrefix += "$[" + id + "]";
@@ -59,6 +59,10 @@ function getArrayChanges(oldArray: any[], newArray: any[], path: any, keyPrefix:
 	}
 
 	return changes;
+}
+
+function isObjectId(value: any): boolean {
+	return value._bsontype == "ObjectID";
 }
 
 function getChanges(oldDoc: any, newDoc: any, path: any, keyPrefix: string): Change[] {
