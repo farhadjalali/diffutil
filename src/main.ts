@@ -1,6 +1,6 @@
 import _ = require("lodash");
 import {ObjectId} from 'mongodb';
-import {Change, DiffKind, MongoPatchWithIdChange, ResultModel} from "./Types";
+import {Change, DiffKind, MongoPatchWithIdChange, ResultModel} from "./types";
 
 const idName = "_id";
 

@@ -32,11 +32,11 @@ var diff = require('diffutil')
 You can find more samples in **main.test.ts**.
 
 ``` javascript
-    const {diff} = require('./main');
+const {diff} = require('./main');
 
-    let _id = new ObjectId();
-    let oldDoc = {_id, month: "may"};  
-    let newDoc = {_id, month: "april"};  
-    let result = diff(oldDoc, newDoc);
-    // result :  [{query: {_id}, update: {$set: {month: "april"}}}]
+let _id = new ObjectId();
+let oldDoc = {_id, month: "may"};  
+let newDoc = {_id, month: "april"};  
+let result = diff(oldDoc, newDoc);
+// result :  [{query: {_id}, update: {$set: {month: "april"}}}]
 ```

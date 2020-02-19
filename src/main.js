@@ -2,7 +2,7 @@
 Object.defineProperty(exports, "__esModule", { value: true });
 const _ = require("lodash");
 const mongodb_1 = require("mongodb");
-const Types_1 = require("./Types");
+const types_1 = require("./types");
 const idName = "_id";
 function getArrayChanges(oldArray, newArray, path, keyPrefix) {
     let changes = [];
@@ -14,15 +14,15 @@ function getArrayChanges(oldArray, newArray, path, keyPrefix) {
         }
         if (newArray.length > oldArray.length)
             for (let i = minLength; i < newArray.length; i++) {
-                let change = new Types_1.Change(path, keyPrefix + i);
-                change.kind = Types_1.DiffKind.arrayAdded;
+                let change = new types_1.Change(path, keyPrefix + i);
+                change.kind = types_1.DiffKind.arrayAdded;
                 change.newVal = newArray[i];
                 changes.push(change);
             }
         else
             for (let i = minLength; i < oldArray.length; i++) {
-                let change = new Types_1.Change(path, keyPrefix + i);
-                change.kind = Types_1.DiffKind.arrayDeleted;
+                let change = new types_1.Change(path, keyPrefix + i);
+                change.kind = types_1.DiffKind.arrayDeleted;
                 change.oldVal = oldArray[i];
                 changes.push(change);
             }
@@ -40,14 +40,14 @@ function getArrayChanges(oldArray, newArray, path, keyPrefix) {
             else
                 itemKeyPrefix += "$[" + id + "]";
             if (oldItem == undefined) {
-                let change = new Types_1.Change(path, itemKeyPrefix);
-                change.kind = Types_1.DiffKind.arrayAdded;
+                let change = new types_1.Change(path, itemKeyPrefix);
+                change.kind = types_1.DiffKind.arrayAdded;
                 change.newVal = newItem;
                 changes.push(change);
             }
             else if (newItem == undefined) {
-                let change = new Types_1.Change(path, itemKeyPrefix);
-                change.kind = Types_1.DiffKind.arrayDeleted;
+                let change = new types_1.Change(path, itemKeyPrefix);
+                change.kind = types_1.DiffKind.arrayDeleted;
                 change.oldVal = oldItem;
                 changes.push(change);
             }
@@ -73,21 +73,21 @@ function getChanges(oldDoc, newDoc, path, keyPrefix) {
     for (let key of keys) {
         let oldVal = oldDoc[key];
         let newVal = newDoc[key];
-        let change = new Types_1.Change(path, keyPrefix + key);
+        let change = new types_1.Change(path, keyPrefix + key);
         if (oldVal == undefined && Array.isArray(newVal))
             oldVal = [];
         if (oldVal == undefined) {
-            change.kind = Types_1.DiffKind.added;
+            change.kind = types_1.DiffKind.added;
             change.newVal = newVal;
             changes.push(change);
         }
         else if (newVal == undefined) {
-            change.kind = Types_1.DiffKind.deleted;
+            change.kind = types_1.DiffKind.deleted;
             change.oldVal = oldVal;
             changes.push(change);
         }
         else {
-            change.kind = Types_1.DiffKind.edited;
+            change.kind = types_1.DiffKind.edited;
             change.newVal = newVal;
             change.oldVal = oldVal;
             if (Array.isArray(newVal) && Array.isArray(oldVal)) {
@@ -116,16 +116,16 @@ function getChanges(oldDoc, newDoc, path, keyPrefix) {
     }
     return changes;
 }
-function diff(oldDoc, newDoc, model = Types_1.ResultModel.MongoPatch) {
+function diff(oldDoc, newDoc, model = types_1.ResultModel.MongoPatch) {
     if (!_.isObject(oldDoc) || !_.isObject(newDoc))
         return oldDoc === newDoc;
     let changes = getChanges(oldDoc, newDoc, null, "");
     switch (model) {
-        case Types_1.ResultModel.MongoPatch:
+        case types_1.ResultModel.MongoPatch:
             return mergeChangesOnMongoPatchWithId(changes);
-        case Types_1.ResultModel.Restful:
+        case types_1.ResultModel.Restful:
             throw "'Restful' is not implemented yet";
-        case Types_1.ResultModel.ChangeSet:
+        case types_1.ResultModel.ChangeSet:
             return changes;
     }
 }
@@ -153,20 +153,20 @@ function mergeChangesOnMongoPatchWithId(changes) {
             }
         }
         switch (change.kind) {
-            case Types_1.DiffKind.added:
-            case Types_1.DiffKind.edited:
+            case types_1.DiffKind.added:
+            case types_1.DiffKind.edited:
                 resultItem.update.$set = resultItem.update.$set || {};
                 resultItem.update.$set[key] = change.newVal;
                 break;
-            case Types_1.DiffKind.deleted:
+            case types_1.DiffKind.deleted:
                 resultItem.update.$unset = resultItem.update.$unset || {};
                 resultItem.update.$unset[key] = "";
                 break;
-            case Types_1.DiffKind.arrayAdded:
+            case types_1.DiffKind.arrayAdded:
                 resultItem.update.$set = resultItem.update.$set || {};
                 resultItem.update.$set[key] = change.newVal;
                 break;
-            case Types_1.DiffKind.arrayDeleted:
+            case types_1.DiffKind.arrayDeleted:
                 resultItem.update.$unset = resultItem.update.$unset || {};
                 resultItem.update.$unset[key] = "";
                 break;
