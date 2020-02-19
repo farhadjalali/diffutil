@@ -4,6 +4,7 @@
     "target": "ES2017",
     "noImplicitAny": false,
     "removeComments": true,
+    "strict": true,
     "preserveConstEnums": true,
     "sourceMap": true
   },

@@ -1,6 +1,6 @@
 import _ = require("lodash");
-import {ObjectId} from "bson";
-import {Change, DiffKind, MongoUpdateParams, ResultModel} from "./types";
+import { ObjectId } from "bson";
+import { Change, DiffKind, ResultModel, MongoUpdateParams } from "./types";
 
 const idName = "_id";
 
