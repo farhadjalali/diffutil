@@ -40,3 +40,24 @@ let newDoc = {_id, month: "april"};
 let result = diff(oldDoc, newDoc);
 // result :  [{query: {_id}, update: {$set: {month: "april"}}}]
 ```
+
+## Arrays update
+
+``` javascript
+
+let _id = new ObjectId();
+let oldDoc = {_id, addresses: [{_id: item1Id, city: "London"}]};
+let newDoc = {_id, addresses: [{_id: item1Id, city: "Sydney"}, {_id: item2Id, city: "Paris"}]};
+
+let result = diff(oldDoc, newDoc);
+// result :   
+//    [{
+//      query: {_id},
+//      update: {
+//           $set: {"addresses.$[item1].city": "Sydney", "addresses.$[item2]": {_id: item2Id, city: "Paris"}},
+//      },
+//      options: {
+//        arrayFilters: [{"item1._id": item1Id}, {"item2._id": item2Id}]
+//      }
+//   }];
+```
