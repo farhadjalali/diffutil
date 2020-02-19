@@ -13,15 +13,13 @@ describe(`simple objects _id:'${_id}'`, () => {
     test('root: no change', () => {
         let oldDoc = { _id, month: "may" };
         let newDoc = { _id, month: "may" };
-        let expectedResult = [];
-        expect(diff(oldDoc, newDoc)).toEqual(expectedResult);
+        expect(diff(oldDoc, newDoc)).toBeFalsy();
     });
     test('root: no change on date', () => {
         let date = new Date();
         let oldDoc = { _id, month: date };
         let newDoc = { _id, month: date };
-        let expectedResult = [];
-        expect(diff(oldDoc, newDoc)).toEqual(expectedResult);
+        expect(diff(oldDoc, newDoc)).toBeFalsy();
     });
     test('root: change on date', () => {
         let date1 = new Date();
@@ -137,6 +135,11 @@ describe('array change with _id', () => {
     let item2Id = new bson_1.ObjectId("5e4c21b8b9858718ac777302");
     let item3Id = new bson_1.ObjectId("5e4c21b8b9858718ac777303");
     let item4Id = new bson_1.ObjectId("5e4c21b8b9858718ac777304");
+    test('no change', () => {
+        let oldDoc = { _id, addresses: [{ _id: item1Id, city: "London", no: null }] };
+        let newDoc = { _id, addresses: [{ _id: item1Id, city: "London", no: null }] };
+        expect(diff(oldDoc, newDoc)).toBeFalsy();
+    });
     test('one change', () => {
         let oldDoc = { _id, addresses: [{ _id: item1Id, city: "London", no: 5 }] };
         let newDoc = { _id, addresses: [{ _id: item1Id, city: "London", no: 6 }] };

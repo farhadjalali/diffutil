@@ -1,6 +1,6 @@
 import _ = require("lodash");
-import { ObjectId } from "bson";
-import { Change, DiffKind, ResultModel, MongoUpdateParams } from "./types";
+import {ObjectId} from "bson";
+import {Change, DiffKind, ResultModel, MongoUpdateParams} from "./types";
 
 const idName = "_id";
 
@@ -84,15 +84,15 @@ function getChanges(oldDoc: any, newDoc: any, path: any, keyPrefix: string): Cha
 
 		let change = new Change(path, keyPrefix + key);
 
-		if (oldVal == undefined && Array.isArray(newVal))
+		if (oldVal === undefined && Array.isArray(newVal))
 			oldVal = [];
 
-		if (oldVal == undefined) { // added property
+		if (oldVal === undefined) { // added property
 			change.kind = DiffKind.added;
 			change.newVal = newVal;
 			changes.push(change);
 
-		} else if (newVal == undefined) { // deleted property
+		} else if (newVal === undefined) { // deleted property
 			change.kind = DiffKind.deleted;
 			change.oldVal = oldVal;
 			changes.push(change);
@@ -130,6 +130,8 @@ export function diff(oldDoc: any, newDoc: any, model: ResultModel = ResultModel.
 		return oldDoc === newDoc;
 
 	let changes = getChanges(oldDoc, newDoc, null, "");
+	if (!changes || changes.length == 0)
+		return null;
 
 	switch (model) {
 		case ResultModel.MongoPatch:

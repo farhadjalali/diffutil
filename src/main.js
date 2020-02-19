@@ -77,14 +77,14 @@ function getChanges(oldDoc, newDoc, path, keyPrefix) {
         let oldVal = oldDoc[key];
         let newVal = newDoc[key];
         let change = new types_1.Change(path, keyPrefix + key);
-        if (oldVal == undefined && Array.isArray(newVal))
+        if (oldVal === undefined && Array.isArray(newVal))
             oldVal = [];
-        if (oldVal == undefined) {
+        if (oldVal === undefined) {
             change.kind = types_1.DiffKind.added;
             change.newVal = newVal;
             changes.push(change);
         }
-        else if (newVal == undefined) {
+        else if (newVal === undefined) {
             change.kind = types_1.DiffKind.deleted;
             change.oldVal = oldVal;
             changes.push(change);
@@ -123,6 +123,8 @@ function diff(oldDoc, newDoc, model = types_1.ResultModel.MongoPatch) {
     if (!_.isObject(oldDoc) || !_.isObject(newDoc))
         return oldDoc === newDoc;
     let changes = getChanges(oldDoc, newDoc, null, "");
+    if (!changes || changes.length == 0)
+        return null;
     switch (model) {
         case types_1.ResultModel.MongoPatch:
             return mergeChangesOnMongoPatch(changes);
