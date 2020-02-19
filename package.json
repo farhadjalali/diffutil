@@ -1,9 +1,9 @@
 {
   "name": "diffutil",
-  "version": "0.1.11",
+  "version": "0.1.13",
   "description": "Compares two objects and extracts the differences. It supports different result structure in order to use for Restful APIs, or MongoDB patches and etc",
   "main": "src/main.js",
-  "types": "src/*.d.ts",
+  "types": "src/module.d.ts",
   "scripts": {
     "test": "jest",
     "build": "tsc"
