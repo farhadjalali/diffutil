@@ -4,3 +4,4 @@ package-lock.json
 *.map
 .vscode/
 *.iml
+coverage
