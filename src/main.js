@@ -125,7 +125,7 @@ function diff(oldDoc, newDoc, model = types_1.ResultModel.MongoPatch) {
     let changes = getChanges(oldDoc, newDoc, null, "");
     switch (model) {
         case types_1.ResultModel.MongoPatch:
-            return mergeChangesOnMongoPatchWithId(changes);
+            return mergeChangesOnMongoPatch(changes);
         case types_1.ResultModel.Restful:
             throw "'Restful' is not implemented yet";
         case types_1.ResultModel.ChangeSet:
@@ -133,7 +133,7 @@ function diff(oldDoc, newDoc, model = types_1.ResultModel.MongoPatch) {
     }
 }
 exports.diff = diff;
-function mergeChangesOnMongoPatchWithId(changes) {
+function mergeChangesOnMongoPatch(changes) {
     let result = [];
     let filterItemIndex = 0;
     for (let change of changes) {

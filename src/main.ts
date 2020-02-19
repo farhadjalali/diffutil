@@ -133,7 +133,7 @@ export function diff(oldDoc: any, newDoc: any, model: ResultModel = ResultModel.
 
 	switch (model) {
 		case ResultModel.MongoPatch:
-			return mergeChangesOnMongoPatchWithId(changes);
+			return mergeChangesOnMongoPatch(changes);
 
 		case ResultModel.Restful:
 			throw "'Restful' is not implemented yet";
@@ -143,7 +143,7 @@ export function diff(oldDoc: any, newDoc: any, model: ResultModel = ResultModel.
 	}
 }
 
-function mergeChangesOnMongoPatchWithId(changes: Change[]): MongoUpdateParams[] {
+function mergeChangesOnMongoPatch(changes: Change[]): MongoUpdateParams[] {
 	let result: MongoUpdateParams[] = [];
 	let filterItemIndex = 0;
 	for (let change of changes) {
