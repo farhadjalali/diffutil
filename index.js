@@ -1,2 +1,2 @@
 export default from "src/main"
-export {MongoPatchWithIdChange} from "src/types"
+export {MongoUpdateParams} from "src/types"

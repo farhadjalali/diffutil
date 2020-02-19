@@ -1,11 +1,11 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-class MongoPatchWithIdChange {
+class MongoUpdateParams {
     constructor() {
         this.update = {};
     }
 }
-exports.MongoPatchWithIdChange = MongoPatchWithIdChange;
+exports.MongoUpdateParams = MongoUpdateParams;
 class Change {
     constructor(path, key) {
         this.path = path;

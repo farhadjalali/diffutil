@@ -1,6 +1,6 @@
 import _ = require("lodash");
 import {ObjectId} from "bson";
-import {Change, DiffKind, MongoPatchWithIdChange, ResultModel} from "./types";
+import {Change, DiffKind, MongoUpdateParams, ResultModel} from "./types";
 
 const idName = "_id";
 
@@ -143,11 +143,11 @@ export function diff(oldDoc: any, newDoc: any, model: ResultModel = ResultModel.
 	}
 }
 
-function mergeChangesOnMongoPatchWithId(changes: Change[]): MongoPatchWithIdChange[] {
-	let result: MongoPatchWithIdChange[] = [];
+function mergeChangesOnMongoPatchWithId(changes: Change[]): MongoUpdateParams[] {
+	let result: MongoUpdateParams[] = [];
 	let filterItemIndex = 0;
 	for (let change of changes) {
-		let resultItem = _.find<MongoPatchWithIdChange>(result, ch => ch.query._id.equals(change.path));
+		let resultItem = _.find<MongoUpdateParams>(result, ch => ch.query._id.equals(change.path));
 		if (!resultItem) {
 			resultItem = {query: {_id: change.path}, update: {}};
 			result.push(resultItem);

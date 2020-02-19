@@ -1,4 +1,4 @@
-export class MongoPatchWithIdChange {
+export class MongoUpdateParams {
 	query: any;
 	update: any = {};
 	options?: any;
