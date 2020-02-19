@@ -1,0 +1,8 @@
+**/main.ts
+**/types.ts
+**/*.test.ts
+**/*.test.js
+**/*.map
+tsconfig.json
+.idea
+coverage
