@@ -1,11 +1,9 @@
-export declare function diff(oldDoc: any, newDoc: any, model?: ResultModel): any;
-
-declare class MongoUpdateParams {
+export declare class MongoUpdateParams {
     query: any;
     update: any;
     options?: any;
 }
-declare class Change {
+export declare class Change {
     constructor(path: any, key: string);
     path: any;
     key: string;
@@ -13,12 +11,12 @@ declare class Change {
     newVal: any;
     kind?: DiffKind;
 }
-declare enum ResultModel {
+export declare enum ResultModel {
     MongoPatch = 1,
     Restful = 2,
     ChangeSet = 3
 }
-declare enum DiffKind {
+export declare enum DiffKind {
     added = "N",
     edited = "E",
     deleted = "D",
