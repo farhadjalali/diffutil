@@ -1,7 +1,6 @@
 import _ = require("lodash");
 import {ObjectId} from "bson";
 import {Change, DiffKind, ResultModel, MongoUpdateParams} from "./types";
-
 const idName = "_id";
 
 function getArrayChanges(oldArray: any[], newArray: any[], path: any, keyPrefix: string) {
@@ -30,10 +29,10 @@ function getArrayChanges(oldArray: any[], newArray: any[], path: any, keyPrefix:
 	} else { // Item with _id
 		let oldIDs = oldArray.map(item => item[idName]);
 		let newIDs = newArray.map(item => item[idName]);
-		let IDs = _.union(oldIDs, newIDs);
+		let IDs = _.uniqBy(oldIDs.concat(newIDs), id => id.toString());
 		for (let id of IDs) {
-			let oldItem = _.find(oldArray, item => item._id.equals(id));
-			let newItem = _.find(newArray, item => item._id.equals(id));
+			let oldItem = _.find(oldArray, item => item[idName].toString() == id.toString());
+			let newItem = _.find(newArray, item => item[idName].toString() == id.toString());
 
 			let itemKeyPrefix = keyPrefix;
 			if (isObjectId(id))

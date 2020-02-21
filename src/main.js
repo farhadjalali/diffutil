@@ -30,10 +30,10 @@ function getArrayChanges(oldArray, newArray, path, keyPrefix) {
     else {
         let oldIDs = oldArray.map(item => item[idName]);
         let newIDs = newArray.map(item => item[idName]);
-        let IDs = _.union(oldIDs, newIDs);
+        let IDs = _.uniqBy(oldIDs.concat(newIDs), id => id.toString());
         for (let id of IDs) {
-            let oldItem = _.find(oldArray, item => item._id.equals(id));
-            let newItem = _.find(newArray, item => item._id.equals(id));
+            let oldItem = _.find(oldArray, item => item[idName].toString() == id.toString());
+            let newItem = _.find(newArray, item => item[idName].toString() == id.toString());
             let itemKeyPrefix = keyPrefix;
             if (isObjectId(id))
                 itemKeyPrefix += "$[$oid:" + id + "]";

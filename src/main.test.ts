@@ -324,4 +324,27 @@ describe('array change with _id', () => {
 
 		expect(diff(oldDoc, newDoc)).toEqual(expectedResult);
 	});
+
+	test(`array simple change`, () => {
+		let _id = new ObjectId("5e4d167d186e2305c0760ace");
+		let _id3 = new ObjectId("5e4d167d186e2305c0760ac3");
+		let oldDoc = {
+			_id, subitem: [{_id: _id3, city: "Sydney"}]
+		};
+		let newDoc = {
+			_id, subitem: [{_id: _id3, city: "Istanbul"}]
+		};
+
+		let expectedResult = [{
+			query: {_id},
+			update: {
+				$set: {"subitem.$[item1].city": "Istanbul"}
+			},
+			options: {
+				arrayFilters: [{"item1._id": _id3}]
+			}
+		}];
+
+		expect(diff(oldDoc, newDoc)).toEqual(expectedResult);
+	});
 });
