@@ -1,6 +1,7 @@
 import _ = require("lodash");
 import {ObjectId} from "bson";
 import {Change, DiffKind, ResultModel, MongoUpdateParams} from "./types";
+
 const idName = "_id";
 
 function getArrayChanges(oldArray: any[], newArray: any[], path: any, keyPrefix: string) {
@@ -9,19 +10,19 @@ function getArrayChanges(oldArray: any[], newArray: any[], path: any, keyPrefix:
 	if (_.some(oldArray, item => !item[idName]) || _.some(newArray, item => !item[idName])) { // Item without _id found
 		let minLength = Math.min(newArray.length, oldArray.length);
 		for (let i = 0; i < minLength; i++) { // Change
-			let innerChanges = getChanges(oldArray[i], newArray[i], path, keyPrefix + i + ".");
+			let innerChanges = getChanges(oldArray[i], newArray[i], path, keyPrefix + "." + i);
 			changes.push(...innerChanges);
 		}
 		if (newArray.length > oldArray.length)
 			for (let i = minLength; i < newArray.length; i++) { // added
-				let change = new Change(path, keyPrefix + i);
+				let change = new Change(path, keyPrefix);
 				change.kind = DiffKind.arrayAdded;
 				change.newVal = newArray[i];
 				changes.push(change);
 			}
 		else
 			for (let i = minLength; i < oldArray.length; i++) { // deleted
-				let change = new Change(path, keyPrefix + i);
+				let change = new Change(path, keyPrefix);
 				change.kind = DiffKind.arrayDeleted;
 				change.oldVal = oldArray[i];
 				changes.push(change);
@@ -36,22 +37,22 @@ function getArrayChanges(oldArray: any[], newArray: any[], path: any, keyPrefix:
 
 			let itemKeyPrefix = keyPrefix;
 			if (isObjectId(id))
-				itemKeyPrefix += "$[$oid:" + id + "]";
+				itemKeyPrefix += ".$[$oid:" + id + "]";
 			else
-				itemKeyPrefix += "$[" + id + "]";
+				itemKeyPrefix += ".$[" + id + "]";
 
 			if (oldItem == undefined) { // added item
-				let change = new Change(path, itemKeyPrefix);
+				let change = new Change(path, keyPrefix);
 				change.kind = DiffKind.arrayAdded;
 				change.newVal = newItem;
 				changes.push(change);
 			} else if (newItem == undefined) { // deleted item
-				let change = new Change(path, itemKeyPrefix);
+				let change = new Change(path, keyPrefix);
 				change.kind = DiffKind.arrayDeleted;
 				change.oldVal = oldItem;
 				changes.push(change);
 			} else { // edited
-				let innerChanges = getChanges(oldItem, newItem, path, itemKeyPrefix + ".");
+				let innerChanges = getChanges(oldItem, newItem, path, itemKeyPrefix);
 				changes.push(...innerChanges);
 			}
 		}
@@ -81,7 +82,7 @@ function getChanges(oldDoc: any, newDoc: any, path: any, keyPrefix: string): Cha
 		let oldVal = oldDoc[key];
 		let newVal = newDoc[key];
 
-		let change = new Change(path, keyPrefix + key);
+		let change = new Change(path, (keyPrefix ? keyPrefix + "." : "") + key);
 
 		if (oldVal === undefined && Array.isArray(newVal))
 			oldVal = [];
@@ -102,11 +103,11 @@ function getChanges(oldDoc: any, newDoc: any, path: any, keyPrefix: string): Cha
 			change.oldVal = oldVal;
 
 			if (Array.isArray(newVal) && Array.isArray(oldVal)) {
-				let arrayChanges = getArrayChanges(oldVal, newVal, path, change.key + ".");
+				let arrayChanges = getArrayChanges(oldVal, newVal, path, change.key);
 				changes.push(...arrayChanges);
 			} else if (_.isObject(newVal)) {
 				if (_.isObject(oldVal)) {
-					let innerChanges = getChanges(oldVal, newVal, path, change.key + ".");
+					let innerChanges = getChanges(oldVal, newVal, path, change.key);
 					changes.push(...innerChanges);
 				} else {
 					changes.push(change);
@@ -146,24 +147,27 @@ export function diff(oldDoc: any, newDoc: any, model: ResultModel = ResultModel.
 
 function mergeChangesOnMongoPatch(changes: Change[]): MongoUpdateParams[] {
 	let result: MongoUpdateParams[] = [];
-	let filterItemIndex = 0;
 	for (let change of changes) {
-		let resultItem = _.find<MongoUpdateParams>(result, ch => ch.query._id.equals(change.path));
+		let key = change.key;
+		let resultItem: MongoUpdateParams;
+
+		if (change.kind != DiffKind.arrayAdded && change.kind != DiffKind.arrayDeleted)
+			resultItem = _.find<MongoUpdateParams>(result, ch => ch.query._id.equals(change.path));
+
 		if (!resultItem) {
 			resultItem = {query: {_id: change.path}, update: {}};
 			result.push(resultItem);
 		}
-		let key = change.key;
 
 		const re = /\$\[(\$oid:)?([0-9a-f]+)\]/;
 		if (re.test(key)) {
 			resultItem.options = resultItem.options || {arrayFilters: []};
 			let match;
 			while (match = re.exec(key)) {   // e.g.   addresses.$[234234].name > addresses.$[item1].name
-				let itemName = "item" + (++filterItemIndex);
+				let itemName = "item" + (resultItem.options.arrayFilters.length);
 				key = key.replace(re, "$[" + itemName + "]");
 				let filter = {};
-				filter[itemName + "._id"] = match[1] ? new ObjectId(match[2]) : parseInt(match[2]);
+				filter[itemName + "." + idName] = match[1] ? new ObjectId(match[2]) : parseInt(match[2]);
 				resultItem.options.arrayFilters.push(filter);
 			}
 		}
@@ -181,13 +185,13 @@ function mergeChangesOnMongoPatch(changes: Change[]): MongoUpdateParams[] {
 				break;
 
 			case DiffKind.arrayAdded:
-				resultItem.update.$set = resultItem.update.$set || {};
-				resultItem.update.$set[key] = change.newVal;
+				resultItem.update.$addToSet = {};
+				resultItem.update.$addToSet[key] = change.newVal;
 				break;
 
 			case DiffKind.arrayDeleted:
-				resultItem.update.$unset = resultItem.update.$unset || {};
-				resultItem.update.$unset[key] = "";
+				resultItem.update.$pull = {};
+				resultItem.update.$pull[key] = change.oldVal[idName] ? {_id: change.oldVal[idName]} : change.oldVal;
 				break;
 		}
 	}
