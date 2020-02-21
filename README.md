@@ -46,6 +46,8 @@ let result = diff(oldDoc, newDoc);
 ``` javascript
 
 let _id = new ObjectId();
+let item1Id = new ObjectId();
+let item2Id = new ObjectId();
 let oldDoc = {_id, addresses: [{_id: item1Id, city: "London"}]};
 let newDoc = {_id, addresses: [{_id: item1Id, city: "Sydney"}, {_id: item2Id, city: "Paris"}]};
 
