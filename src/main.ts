@@ -1,13 +1,15 @@
-import _ = require("lodash");
 import {ObjectId} from "bson";
 import {Change, DiffKind, ResultModel, MongoUpdateParams} from "./types";
 
 const idName = "_id";
+const distinct = (value, index, self) => {
+	return self.indexOf(value) === index;
+};
 
 function getArrayChanges(oldArray: any[], newArray: any[], path: any, keyPrefix: string) {
 	let changes: Change[] = [];
 
-	if (_.some(oldArray, item => !item[idName]) || _.some(newArray, item => !item[idName])) { // Item without _id found
+	if (oldArray.some(item => !item[idName]) || newArray.some(item => !item[idName])) { // Item without _id found
 		let minLength = Math.min(newArray.length, oldArray.length);
 		for (let i = 0; i < minLength; i++) { // Change
 			let innerChanges = getChanges(oldArray[i], newArray[i], path, keyPrefix + "." + i);
@@ -28,15 +30,15 @@ function getArrayChanges(oldArray: any[], newArray: any[], path: any, keyPrefix:
 				changes.push(change);
 			}
 	} else { // Item with _id
-		let oldIDs = oldArray.map(item => item[idName]);
-		let newIDs = newArray.map(item => item[idName]);
-		let IDs = _.uniqBy(oldIDs.concat(newIDs), id => id.toString());
+		let oldIDs = oldArray.map(item => item[idName].toString());
+		let newIDs = newArray.map(item => item[idName].toString());
+		let IDs = oldIDs.concat(newIDs).filter(distinct);
 		for (let id of IDs) {
-			let oldItem = _.find(oldArray, item => item[idName].toString() == id.toString());
-			let newItem = _.find(newArray, item => item[idName].toString() == id.toString());
+			let oldItem = oldArray.find(item => item[idName].toString() == id);
+			let newItem = newArray.find(item => item[idName].toString() == id);
 
 			let itemKeyPrefix = keyPrefix;
-			if (isObjectId(id))
+			if (/^[a-f0-9]{24}$/.test(id))
 				itemKeyPrefix += ".$[$oid:" + id + "]";
 			else
 				itemKeyPrefix += ".$[" + id + "]";
@@ -70,12 +72,12 @@ function getChanges(oldDoc: any, newDoc: any, path: any, keyPrefix: string): Cha
 
 	let oldKeys = Object.keys(oldDoc);
 	let newKeys = Object.keys(newDoc);
-	let keys = _.union(oldKeys, newKeys);
+	let keys = oldKeys.concat(newKeys).filter(distinct);
 
 	let compareBasedOnId = oldDoc[idName] && newDoc[idName];
 	if (compareBasedOnId) {
 		keys = keys.filter(key => key !== idName);
-		if (!path) path = newDoc["_id"];
+		if (!path) path = newDoc[idName];
 	}
 
 	for (let key of keys) {
@@ -105,15 +107,15 @@ function getChanges(oldDoc: any, newDoc: any, path: any, keyPrefix: string): Cha
 			if (Array.isArray(newVal) && Array.isArray(oldVal)) {
 				let arrayChanges = getArrayChanges(oldVal, newVal, path, change.key);
 				changes.push(...arrayChanges);
-			} else if (_.isObject(newVal)) {
-				if (_.isObject(oldVal)) {
+			} else if (newVal === Object(newVal)) {
+				if (oldVal === Object(oldVal)) {
 					let innerChanges = getChanges(oldVal, newVal, path, change.key);
 					changes.push(...innerChanges);
 				} else {
 					changes.push(change);
 				}
 			} else {
-				if (_.isObject(oldVal)) {
+				if (oldVal === Object(oldVal)) {
 					changes.push(change);
 				} else {
 					if (oldVal !== newVal) // no change
@@ -126,7 +128,7 @@ function getChanges(oldDoc: any, newDoc: any, path: any, keyPrefix: string): Cha
 }
 
 export function diff(oldDoc: any, newDoc: any, model: ResultModel = ResultModel.MongoPatch): any {
-	if (!_.isObject(oldDoc) || !_.isObject(newDoc))
+	if (oldDoc !== Object(oldDoc) || newDoc !== Object(newDoc))
 		return oldDoc === newDoc;
 
 	let changes = getChanges(oldDoc, newDoc, null, "");
@@ -152,7 +154,7 @@ function mergeChangesOnMongoPatch(changes: Change[]): MongoUpdateParams[] {
 		let resultItem: MongoUpdateParams;
 
 		if (change.kind != DiffKind.arrayAdded && change.kind != DiffKind.arrayDeleted)
-			resultItem = _.find<MongoUpdateParams>(result, ch => ch.query._id.equals(change.path));
+			resultItem = result.find(ch => ch.query._id.equals(change.path));
 
 		if (!resultItem) {
 			resultItem = {query: {_id: change.path}, update: {}};

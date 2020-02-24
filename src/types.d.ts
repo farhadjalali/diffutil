@@ -1,4 +1,5 @@
 export declare class MongoUpdateParams {
+    _id?: any;
     query: any;
     update: any;
     options?: any;
