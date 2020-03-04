@@ -1,6 +1,6 @@
 {
   "name": "diffutil",
-  "version": "0.2.1",
+  "version": "0.2.2",
   "description": "Compares two objects and extracts the differences. It supports different result structure in order to use for Restful APIs, or MongoDB patches and etc",
   "main": "index.js",
   "types": "index.d.ts",
@@ -25,6 +25,7 @@
     "array",
     "object",
     "deep",
+    "util",
     "nested",
     "restfull"
   ],
@@ -36,9 +37,12 @@
   },
   "devDependencies": {
     "@types/jest": "^25.1.1",
-    "@types/lodash": "^4.14.136",
     "@types/node": "^13.7.0",
     "jest": "^25.1.0",
     "typescript": "^3.7.5"
-  }
+  },
+  "bugs": {
+    "url": "https://github.com/mina-its/diffutil/issues"
+  },
+  "homepage": "https://github.com/mina-its/diffutil#readme"
 }

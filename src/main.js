@@ -61,9 +61,6 @@ function getArrayChanges(oldArray, newArray, path, keyPrefix) {
     }
     return changes;
 }
-function isObjectId(value) {
-    return value._bsontype == "ObjectID";
-}
 function getChanges(oldDoc, newDoc, path, keyPrefix) {
     let changes = [];
     let oldKeys = Object.keys(oldDoc);
@@ -130,8 +127,6 @@ function diff(oldDoc, newDoc, model = types_1.ResultModel.MongoPatch) {
     switch (model) {
         case types_1.ResultModel.MongoPatch:
             return mergeChangesOnMongoPatch(changes);
-        case types_1.ResultModel.Restful:
-            throw "'Restful' is not implemented yet";
         case types_1.ResultModel.ChangeSet:
             return changes;
     }
@@ -143,7 +138,11 @@ function mergeChangesOnMongoPatch(changes) {
         let key = change.key;
         let resultItem;
         if (change.kind != types_1.DiffKind.arrayAdded && change.kind != types_1.DiffKind.arrayDeleted)
-            resultItem = result.find(ch => ch.query._id.equals(change.path));
+            resultItem = result.find(ch => {
+                return ((typeof ch.query._id == "object" && ch.query._id.equals(change.path)) ||
+                    (typeof ch.query._id != "object" && ch.query._id === change.path))
+                    && !ch.update.$pull && !ch.update.$addToSet;
+            });
         if (!resultItem) {
             resultItem = { query: { _id: change.path }, update: {} };
             result.push(resultItem);

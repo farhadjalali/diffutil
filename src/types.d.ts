@@ -14,7 +14,6 @@ export declare class Change {
 }
 export declare enum ResultModel {
     MongoPatch = 1,
-    Restful = 2,
     ChangeSet = 3
 }
 export declare enum DiffKind {

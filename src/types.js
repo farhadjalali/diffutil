@@ -13,7 +13,6 @@ exports.Change = Change;
 var ResultModel;
 (function (ResultModel) {
     ResultModel[ResultModel["MongoPatch"] = 1] = "MongoPatch";
-    ResultModel[ResultModel["Restful"] = 2] = "Restful";
     ResultModel[ResultModel["ChangeSet"] = 3] = "ChangeSet";
 })(ResultModel = exports.ResultModel || (exports.ResultModel = {}));
 var DiffKind;

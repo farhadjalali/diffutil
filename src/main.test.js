@@ -1,6 +1,7 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 const bson_1 = require("bson");
+const types_1 = require("./types");
 const { diff } = require('./main');
 let _id = new bson_1.ObjectId();
 describe(`simple objects _id:'${_id}'`, () => {
@@ -144,6 +145,28 @@ describe('array change with _id', () => {
     let item2Id = new bson_1.ObjectId("5e4c21b8b9858718ac777302");
     let item3Id = new bson_1.ObjectId("5e4c21b8b9858718ac777303");
     let item4Id = new bson_1.ObjectId("5e4c21b8b9858718ac777304");
+    test('no change, numeric _d', () => {
+        let oldDoc = { _id: 1, addresses: [{ _id: 2, city: "London", no: 5 }] };
+        let newDoc = { _id: 1, addresses: [{ _id: 2, city: "London", no: 6, phones: "+21", sizes: ["small"] }] };
+        let expectedResult = [{
+                query: { _id: 1 },
+                update: {
+                    $set: { "addresses.$[item0].no": 6, "addresses.$[item1].phones": "+21" }
+                },
+                options: {
+                    arrayFilters: [{ "item0._id": 2 }, { "item1._id": 2 }]
+                }
+            }, {
+                query: { _id: 1 },
+                update: {
+                    $addToSet: { "addresses.$[item0].sizes": "small" }
+                },
+                options: {
+                    arrayFilters: [{ "item0._id": 2 }]
+                }
+            }];
+        expect(diff(oldDoc, newDoc)).toEqual(expectedResult);
+    });
     test('no change', () => {
         let oldDoc = { _id, addresses: [{ _id: item1Id, city: "London", no: null }] };
         let newDoc = { _id, addresses: [{ _id: item1Id, city: "London", no: null }] };
@@ -214,6 +237,32 @@ describe('array change with _id', () => {
                 query: { _id },
                 update: {
                     $addToSet: { "addresses": { _id: item3Id, city: "LA" } }
+                }
+            }];
+        let result = diff(oldDoc, newDoc);
+        expect(result).toEqual(expectedResult);
+    });
+    test(`first delete then update`, () => {
+        let oldDoc = {
+            _id, addresses: [{ _id: item1Id, city: "London" }],
+            phones: [{ _id: item2Id, code: "+21" }],
+        };
+        let newDoc = {
+            _id, addresses: [],
+            phones: [{ _id: item2Id, code: "+20" }],
+        };
+        let expectedResult = [{
+                query: { _id },
+                update: {
+                    $pull: { "addresses": { _id: item1Id } },
+                }
+            }, {
+                query: { _id },
+                update: {
+                    $set: { "phones.$[item0].code": "+20" }
+                },
+                options: {
+                    arrayFilters: [{ "item0._id": item2Id }]
                 }
             }];
         let result = diff(oldDoc, newDoc);
@@ -331,6 +380,14 @@ describe('array change with _id', () => {
                 }
             }];
         expect(diff(oldDoc, newDoc)).toEqual(expectedResult);
+    });
+});
+describe('changeset ', () => {
+    test('root: two change', () => {
+        let oldDoc = { _id: 1, month: "may" };
+        let newDoc = { _id: 1, month: "april" };
+        let expectedResult = [{ key: "month", kind: "E", newVal: "april", oldVal: "may", path: 1 }];
+        expect(diff(oldDoc, newDoc, types_1.ResultModel.ChangeSet)).toEqual(expectedResult);
     });
 });
 //# sourceMappingURL=main.test.js.map

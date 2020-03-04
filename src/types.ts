@@ -20,7 +20,6 @@ export class Change {
 
 export enum ResultModel {
 	MongoPatch = 1,
-	Restful = 2,
 	ChangeSet = 3
 }
 
