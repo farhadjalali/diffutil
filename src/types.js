@@ -1,5 +1,6 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
+exports.DiffKind = exports.ResultModel = exports.Change = exports.MongoUpdateParams = void 0;
 class MongoUpdateParams {
 }
 exports.MongoUpdateParams = MongoUpdateParams;

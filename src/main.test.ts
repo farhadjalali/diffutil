@@ -1,8 +1,11 @@
 import {ObjectId} from "bson";
+import {ResultModel} from "./types";
 
 const {diff} = require('./main');
 
 let _id = new ObjectId();
+let _id1 = new ObjectId("5e9fd19e0bb25d2494295524");
+let _id2 = new ObjectId("5e9fd19e0bb25d2494295525");
 
 describe(`simple objects _id:'${_id}'`, () => {
 	test('diff none object', () => {
@@ -46,6 +49,34 @@ describe(`simple objects _id:'${_id}'`, () => {
 		let oldDoc = {_id, title: "Roze"};
 		let newDoc = {_id, title: {"en": "Roze"}};
 		let expectedResult = [{query: {_id}, update: {$set: {title: {"en": "Roze"}}}}];
+		expect(diff(oldDoc, newDoc)).toEqual(expectedResult);
+	});
+
+	test('root: change on objectid', () => {
+		let oldDoc = {_id, type: _id1};
+		let newDoc = {_id, type: _id2};
+		let expectedResult = [{query: {_id}, update: {$set: {type: _id2}}}];
+		expect(diff(oldDoc, newDoc)).toEqual(expectedResult);
+	});
+
+	test('root: change on objectid to null', () => {
+		let oldDoc = {_id, type: _id1};
+		let newDoc = {_id, type: null};
+		let expectedResult = [{query: {_id}, update: {$set: {type: null}}}];
+		expect(diff(oldDoc, newDoc)).toEqual(expectedResult);
+	});
+
+	test('root: change on from null to objectid', () => {
+		let oldDoc = {_id, type: null};
+		let newDoc = {_id, type: _id2};
+		let expectedResult = [{query: {_id}, update: {$set: {type: _id2}}}];
+		expect(diff(oldDoc, newDoc)).toEqual(expectedResult);
+	});
+
+	test('root: no change', () => {
+		let oldDoc = {_id, type: null};
+		let newDoc = {_id, type: null};
+		let expectedResult = null;
 		expect(diff(oldDoc, newDoc)).toEqual(expectedResult);
 	});
 
@@ -103,60 +134,69 @@ describe(`simple objects _id:'${_id}'`, () => {
 });
 
 describe('array change', () => {
-	test('level1 one change', () => {
-		let oldDoc = {_id, addresses: [{city: "London", no: 5}]};
-		let newDoc = {_id, addresses: [{city: "Paris", no: 5}]};
+	describe('level 1', () => {
+		test('update', () => {
+			let oldDoc = {_id, addresses: [{city: "London", no: 5}]};
+			let newDoc = {_id, addresses: [{city: "Paris", no: 5}]};
 
-		let expectedResult = [{
-			query: {_id},
-			update: {
-				$set: {"addresses.0.city": "Paris"}
-			}
-		}];
+			let expectedResult = [{
+				query: {_id},
+				update: {
+					$set: {"addresses.0.city": "Paris"}
+				}
+			}];
 
-		expect(diff(oldDoc, newDoc)).toEqual(expectedResult);
+			expect(diff(oldDoc, newDoc)).toEqual(expectedResult);
+		});
+
+		test('update, add', () => {
+			let oldDoc = {_id, addresses: [{city: "London", no: 5}]};
+			let newDoc = {_id, addresses: [{city: "Paris", no: 5}, {city: "Istanbul", no: 8}]};
+
+			let expectedResult = [{
+				query: {_id},
+				update: {$set: {"addresses.0.city": "Paris"}}
+			}, {
+				query: {_id},
+				update: {$addToSet: {"addresses": {city: "Istanbul", no: 8}}}
+			}];
+
+			let result = diff(oldDoc, newDoc);
+			expect(result).toEqual(expectedResult);
+		});
+
+		test('update, delete', () => {
+			let oldDoc = {_id, addresses: [{city: "London", no: 5}, {city: "Istanbul", no: 8}]};
+			let newDoc = {_id, addresses: [{city: "Paris", no: 5}]};
+
+			let expectedResult = [{
+				query: {_id},
+				update: {$set: {"addresses.0.city": "Paris"}}
+			}, {
+				query: {_id},
+				update: {$pull: {"addresses": {city: "Istanbul", no: 8}}}
+			}];
+
+			let result = diff(oldDoc, newDoc);
+			expect(result).toEqual(expectedResult);
+		});
 	});
 
-	test('level1 one change, one item add', () => {
-		let oldDoc = {_id, addresses: [{city: "London", no: 5}]};
-		let newDoc = {_id, addresses: [{city: "Paris", no: 5}, {city: "Istanbul", no: 8}]};
+	describe('level 2', () => {
+		test('update, add', () => {
+			let oldDoc = {_id, addresses: [{city: "London", streets: [{name: "x-10"}]}]};
+			let newDoc = {_id, addresses: [{city: "London", streets: [{name: "y-20"}, {name: "z-30"}]}]};
 
-		let expectedResult = [{
-			query: {_id},
-			update: {
-				$set: {"addresses.0.city": "Paris", "addresses.1": {city: "Istanbul", no: 8}}
-			}
-		}];
+			let expectedResult = [{
+				query: {_id},
+				update: {$set: {"addresses.0.streets.0.name": "y-20"}}
+			}, {
+				query: {_id},
+				update: {$addToSet: {"addresses.0.streets": {name: "z-30"}}}
+			}];
 
-		expect(diff(oldDoc, newDoc)).toEqual(expectedResult);
-	});
-
-	test('level1 one change, one item delete', () => {
-		let oldDoc = {_id, addresses: [{city: "London", no: 5}, {city: "Istanbul", no: 8}]};
-		let newDoc = {_id, addresses: [{city: "Paris", no: 5}]};
-
-		let expectedResult = [{
-			query: {_id},
-			update: {
-				$set: {"addresses.0.city": "Paris"}, $unset: {"addresses.1": ""}
-			}
-		}];
-
-		expect(diff(oldDoc, newDoc)).toEqual(expectedResult);
-	});
-
-	test('level2 one change, one item add', () => {
-		let oldDoc = {_id, addresses: [{city: "London", streets: [{name: "x-10"}]}]};
-		let newDoc = {_id, addresses: [{city: "London", streets: [{name: "y-20"}, {name: "z-30"}]}]};
-
-		let expectedResult = [{
-			query: {_id},
-			update: {
-				$set: {"addresses.0.streets.0.name": "y-20", "addresses.0.streets.1": {name: "z-30"}}
-			}
-		}];
-
-		expect(diff(oldDoc, newDoc)).toEqual(expectedResult);
+			expect(diff(oldDoc, newDoc)).toEqual(expectedResult);
+		});
 	});
 });
 
@@ -165,6 +205,31 @@ describe('array change with _id', () => {
 	let item2Id = new ObjectId("5e4c21b8b9858718ac777302");
 	let item3Id = new ObjectId("5e4c21b8b9858718ac777303");
 	let item4Id = new ObjectId("5e4c21b8b9858718ac777304");
+
+	test('no change, numeric _d', () => {
+		let oldDoc = {_id: 1, addresses: [{_id: 2, city: "London", no: 5}]};
+		let newDoc = {_id: 1, addresses: [{_id: 2, city: "London", no: 6, phones: "+21", sizes: ["small"]}]};
+
+		let expectedResult = [{
+			query: {_id: 1},
+			update: {
+				$set: {"addresses.$[item0].no": 6, "addresses.$[item1].phones": "+21"}
+			},
+			options: {
+				arrayFilters: [{"item0._id": 2}, {"item1._id": 2}]
+			}
+		}, {
+			query: {_id: 1},
+			update: {
+				$addToSet: {"addresses.$[item0].sizes": "small"}
+			},
+			options: {
+				arrayFilters: [{"item0._id": 2}]
+			}
+		}];
+
+		expect(diff(oldDoc, newDoc)).toEqual(expectedResult);
+	});
 
 	test('no change', () => {
 		let oldDoc = {_id, addresses: [{_id: item1Id, city: "London", no: null}]};
@@ -180,34 +245,39 @@ describe('array change with _id', () => {
 		let expectedResult = [{
 			query: {_id},
 			update: {
-				$set: {"addresses.$[item1].no": 6}
+				$set: {"addresses.$[item0].no": 6}
 			},
 			options: {
-				arrayFilters: [{"item1._id": item1Id}]
+				arrayFilters: [{"item0._id": item1Id}]
 			}
 		}];
 
 		expect(diff(oldDoc, newDoc)).toEqual(expectedResult);
 	});
 
-	test(`one item change and one item add`, () => {
+	test(`update, add`, () => {
 		let oldDoc = {_id, addresses: [{_id: item1Id, city: "London"}]};
 		let newDoc = {_id, addresses: [{_id: item1Id, city: "Tehran"}, {_id: item2Id, city: "Paris"}]};
 
 		let expectedResult = [{
 			query: {_id},
 			update: {
-				$set: {"addresses.$[item1].city": "Tehran", "addresses.$[item2]": {_id: item2Id, city: "Paris"}},
+				$set: {"addresses.$[item0].city": "Tehran"},
 			},
 			options: {
-				arrayFilters: [{"item1._id": item1Id}, {"item2._id": item2Id}]
+				arrayFilters: [{"item0._id": item1Id}]
+			}
+		}, {
+			query: {_id},
+			update: {
+				$addToSet: {"addresses": {_id: item2Id, city: "Paris"}},
 			}
 		}];
 
 		expect(diff(oldDoc, newDoc)).toEqual(expectedResult);
 	});
 
-	test(`one item delete, one item change, one item insert, change order`, () => {
+	test(`update, delete, add, re-order`, () => {
 		let oldDoc = {
 			_id, addresses: [
 				{_id: item1Id, city: "London"},
@@ -226,18 +296,57 @@ describe('array change with _id', () => {
 		let expectedResult = [{
 			query: {_id},
 			update: {
-				$set: {"addresses.$[item1].city": "Sidney", "addresses.$[item3]": {_id: item3Id, city: "LA"}},
-				$unset: {"addresses.$[item2]": ""},
+				$set: {"addresses.$[item0].city": "Sidney"}
 			},
 			options: {
-				arrayFilters: [{"item1._id": item1Id}, {"item2._id": item4Id}, {"item3._id": item3Id}]
+				arrayFilters: [{"item0._id": item1Id}]
+			}
+		}, {
+			query: {_id},
+			update: {
+				$pull: {"addresses": {_id: item4Id}},
+			}
+		}, {
+			query: {_id},
+			update: {
+				$addToSet: {"addresses": {_id: item3Id, city: "LA"}}
 			}
 		}];
 
-		expect(diff(oldDoc, newDoc)).toEqual(expectedResult);
+		let result = diff(oldDoc, newDoc);
+		expect(result).toEqual(expectedResult);
 	});
 
-	test(`level 2 change, one add`, () => {
+	test(`first delete then update`, () => {
+		let oldDoc = {
+			_id, addresses: [{_id: item1Id, city: "London"}],
+			phones: [{_id: item2Id, code: "+21"}],
+		};
+		let newDoc = {
+			_id, addresses: [],
+			phones: [{_id: item2Id, code: "+20"}],
+		};
+
+		let expectedResult = [{
+			query: {_id},
+			update: {
+				$pull: {"addresses": {_id: item1Id}},
+			}
+		}, {
+			query: {_id},
+			update: {
+				$set: {"phones.$[item0].code": "+20"}
+			},
+			options: {
+				arrayFilters: [{"item0._id": item2Id}]
+			}
+		}];
+
+		let result = diff(oldDoc, newDoc);
+		expect(result).toEqual(expectedResult);
+	});
+
+	test(`level 2, update, add`, () => {
 		let item11Id = new ObjectId("5e4c21b8b9858718ac777311");
 		let item12Id = new ObjectId("5e4c21b8b9858718ac777312");
 		let item13Id = new ObjectId("5e4c21b8b9858718ac777313");
@@ -268,12 +377,21 @@ describe('array change with _id', () => {
 			query: {_id},
 			update: {
 				$set: {
-					"addresses.$[item1].cities.$[item2].name": "Sydney",
-					"addresses.$[item3].cities.$[item4]": {_id: item13Id, name: "Delhi"}
+					"addresses.$[item0].cities.$[item1].name": "Sydney"
 				},
 			},
 			options: {
-				arrayFilters: [{"item1._id": item1Id}, {"item2._id": item12Id}, {"item3._id": item1Id}, {"item4._id": item13Id}]
+				arrayFilters: [{"item0._id": item1Id}, {"item1._id": item12Id}]
+			}
+		}, {
+			query: {_id},
+			update: {
+				$addToSet: {
+					"addresses.$[item0].cities": {_id: item13Id, name: "Delhi"}
+				},
+			},
+			options: {
+				arrayFilters: [{"item0._id": item1Id}]
 			}
 		}];
 
@@ -314,11 +432,15 @@ describe('array change with _id', () => {
 		let expectedResult = [{
 			query: {_id},
 			update: {
-				$set: {"addresses.$[item1].cities.$[item2].name": "Sydney"},
-				$unset: {"locales.$[item3]": ""}
+				$set: {"addresses.$[item0].cities.$[item1].name": "Sydney"}
 			},
 			options: {
-				arrayFilters: [{"item1._id": item1Id}, {"item2._id": item11Id}, {"item3._id": item13Id}]
+				arrayFilters: [{"item0._id": item1Id}, {"item1._id": item11Id}]
+			}
+		}, {
+			query: {_id},
+			update: {
+				$pull: {"locales": {_id: item13Id}}
 			}
 		}];
 
@@ -338,13 +460,27 @@ describe('array change with _id', () => {
 		let expectedResult = [{
 			query: {_id},
 			update: {
-				$set: {"subitem.$[item1].city": "Istanbul"}
+				$set: {"subitem.$[item0].city": "Istanbul"}
 			},
 			options: {
-				arrayFilters: [{"item1._id": _id3}]
+				arrayFilters: [{"item0._id": _id3}]
 			}
 		}];
 
 		expect(diff(oldDoc, newDoc)).toEqual(expectedResult);
 	});
 });
+
+describe('changeset ', () => {
+	test('root: two change', () => {
+		let oldDoc = {_id: 1, month: "may"};
+		let newDoc = {_id: 1, month: "april"};
+		let expectedResult = [{key: "month", kind: "E", newVal: "april", oldVal: "may", path: 1}];
+		expect(diff(oldDoc, newDoc, ResultModel.ChangeSet)).toEqual(expectedResult);
+	});
+});
+
+
+
+
+
